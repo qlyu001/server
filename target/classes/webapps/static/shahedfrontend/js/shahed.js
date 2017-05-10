@@ -26,7 +26,7 @@ function Fly2Destinaiton() {
 
 // Create the draggable rectangle for the first time and initialize listeners
 function CreateRectangle() {
-/*
+
   var bounds = new google.maps.LatLngBounds(
      new google.maps.LatLng(0, 0),
      new google.maps.LatLng(1, 1));
@@ -37,8 +37,9 @@ function CreateRectangle() {
     strokeOpacity : 0.8,
     draggable : true,
     editable : true
-  });*/
+  });
   //TODO: draw a polygon with several points and it need to fixed point
+  /*
    	var triangleCoords = [
     new google.maps.LatLng(40.4250241, -124.101562),
     new google.maps.LatLng(34.669359, -120.234375),
@@ -57,6 +58,7 @@ function CreateRectangle() {
     fillColor: '#FF0000',
     fillOpacity: 0.35
   });
+  */
   google.maps.event.addListener(rectangle, 'mousedown', function() {rectangleIsDragged = true;});
   google.maps.event.addListener(rectangle, 'mouseup', function() {rectangleIsDragged = false;});
   if ($("#results-panel").length > 0)
@@ -91,11 +93,23 @@ function aggregateQuery(){
   var toDate = document.getElementById("toDatePicker").value;
   var ne = rectangle.getBounds().getNorthEast();
   var sw = rectangle.getBounds().getSouthWest();
+  
+  
+ 
+  requestURL = requestURL = "cgi-bin/aggregate_query.cgi?"
+                + "min_lat=" + sw.lat() + "&min_lon=" + sw.lng()
+                + "&max_lat=" + ne.lat() + "&max_lon=" + ne.lng()
+                + "&fromDate=" + fromDate
+                + "&toDate=" + toDate ;
+  
+  
+  /////////////////////////////////////////////////////////
+  /*original code
   requestURL = "cgi-bin/aggregate_query.cgi?"
                 + "min_lat=" + sw.lat() + "&min_lon=" + sw.lng()
                 + "&max_lat=" + ne.lat() + "&max_lon=" + ne.lng()
                 + "&fromDate=" + fromDate
-                + "&toDate=" + toDate;
+                + "&toDate=" + toDate;*/
   jQuery.ajax(requestURL, {success : function(data) {
     min = ((parseInt(data.results.min)/50) - 273.15) * 1.8000 + 32.00;
     $("#min").val(min);
@@ -150,7 +164,61 @@ function generateImage() {
     alert(response);
   }});
 }
-    
+
+
+var placelist= new Array();
+function changeVector(){
+	Ajax3();
+	addOption2();
+	nameChoose();
+	
+}
+
+//reading the data
+var Ajax3 = function ()  
+{  //var obj=document.getElementById('vector')
+   //var name= "countries.shp"
+   
+  
+    $.getJSON ("placelist/cb_2016_us_state_20m.shp.txt", function (data)  
+    { 
+      	
+        $.each (data, function (i, item)  
+        {    for ( placeKey in item){
+        	
+        		placelist[i]=item[placeKey]
+        		 
+          		
+            }
+        	placelist.sort();
+		
+		
+        });
+          
+    });  
+
+}  
+
+function  addOption2(){setTimeout(function(){ 
+	//根据id查找对象，
+	
+	document.getElementById("chooseName").innerHTML = "";
+	var  obj=document.getElementById( 'chooseName' );
+	//添加一个选项
+	
+	for(i=0;i<placelist.length;i++){
+	obj.add( new  Option( placelist[i] , placelist[i] ));
+	}
+	
+},10); 
+}
+function nameChoose(){
+
+	var chooseName = $('#chooseName :selected').text();
+  	console.log( "success" );
+  	 requestURL = requestURL = "cgi-bin/aggregate_query.cgi?"
+                + "chooseName=" + chooseName ;
+}
 function generateVideo() {
   if ($("#fromDatePicker").val().length == 0 || $("#toDatePicker").val().length == 0) {
     alert('Please specify start and end date');
@@ -316,6 +384,7 @@ $(function () {
          // Update x to wrap-around the earth
          var x = (coord.x % size + size) % size;
          var selectedDataset = $("#datasets").find(":selected").val();
+         var selectedCountry = $("#country").find(":selected").val();
          var selectedDate = "2013.12."+pad($("#time-travel").val(), 2);
          //return "http://tile.openstreetmap.org/" + zoom + "/" + coord.x + "/" + coord.y + ".png";
          return selectedDataset+selectedDate+"/tile_"+zoom + "_" + x + "-" + coord.y + ".png";
@@ -328,4 +397,6 @@ $(function () {
   $("#datasets").change(refreshFunc);
   $("#time-travel").change(refreshFunc);*/
 });
+
+
 

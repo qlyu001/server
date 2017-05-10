@@ -1,5 +1,6 @@
 package edu.ucr.cs.server;
 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -64,7 +65,7 @@ public class MapServer extends AbstractHandler {
 		      String east = request.getParameter("max_lon");
 		      String south = request.getParameter("min_lat");
 		      String north = request.getParameter("max_lat");
-		      
+		      String name = request.getParameter("query_name");
 		      String[] startDateParts = request.getParameter("fromDate").split("/");
 		      String startDate = startDateParts[2] + '.' + startDateParts[0] + '.' + startDateParts[1];
 		      String[] endDateParts = request.getParameter("toDate").split("/");
