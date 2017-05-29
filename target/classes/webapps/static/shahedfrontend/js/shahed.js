@@ -181,7 +181,7 @@ function changeVector(){
 	
 	Ajax3();
 	addOption2();
-	nameQuery();
+	//nameQuery();
 	
 }
 
@@ -231,13 +231,13 @@ function nameQuery(){
      }
     
  	processingRequest = true;
-	var chooseName = $('#chooseName :selected').text();
-  
+	var chooseName = $('#chooseName :selected').val();
+   alert(chooseName);
  	requestURL = requestURL = "cgi-bin/name_query.cgi?"
                 + "chooseName=" + chooseName ;
     
     jQuery.ajax(requestURL, {success: function(response) {
-	    //alert(response);
+	    alert(response);
 	  }, complete: function() {processingRequest = false;} });
 }
 function generateVideo() {
