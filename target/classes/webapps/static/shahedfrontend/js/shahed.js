@@ -26,7 +26,7 @@ function Fly2Destinaiton() {
 
 // Create the draggable rectangle for the first time and initialize listeners
 function CreateRectangle() {
-
+/*
   var bounds = new google.maps.LatLngBounds(
      new google.maps.LatLng(0, 0),
      new google.maps.LatLng(1, 1));
@@ -37,9 +37,18 @@ function CreateRectangle() {
     strokeOpacity : 0.8,
     draggable : true,
     editable : true
-  });
+  });*/
   //TODO: draw a polygon with several points and it need to fixed point
-  /*
+  // here I am there is two vector, one vector is for lattitude, another is for longtitude
+  	var lat = [40.4250241,34.669359,32.472695,34.307144,36.509636,36.013561];
+  	var long = [-124.101562,-120.234375,-114.697266,-114.169922,-117.092285,-116.520996]
+  	var triangleCoords = [];
+  	for (i = 0; i < lat.length; i++) { 
+    	triangleCoords.push( new google.maps.LatLng(lat[i], long[i]));
+    	console.log( lat[i], long[i]);
+	}
+
+  	/*
    	var triangleCoords = [
     new google.maps.LatLng(40.4250241, -124.101562),
     new google.maps.LatLng(34.669359, -120.234375),
@@ -49,7 +58,7 @@ function CreateRectangle() {
     new google.maps.LatLng(36.013561, -116.520996),
     
     
-  ];
+  ];*/
   	rectangle = new google.maps.Polygon({
     paths: triangleCoords,
     strokeColor: '#FF0000',
@@ -58,7 +67,7 @@ function CreateRectangle() {
     fillColor: '#FF0000',
     fillOpacity: 0.35
   });
-  */
+  
   google.maps.event.addListener(rectangle, 'mousedown', function() {rectangleIsDragged = true;});
   google.maps.event.addListener(rectangle, 'mouseup', function() {rectangleIsDragged = false;});
   if ($("#results-panel").length > 0)
@@ -128,6 +137,7 @@ function aggregateQuery(){
   }});
 }
 
+
 function generateImage() {
   if ($("#fromDatePicker").val().length == 0) {
     alert('Please specify start date');
@@ -170,7 +180,7 @@ var placelist= new Array();
 function changeVector(){
 	Ajax3();
 	addOption2();
-	nameChoose();
+	nameQuery();
 	
 }
 
@@ -212,12 +222,22 @@ function  addOption2(){setTimeout(function(){
 	
 },10); 
 }
-function nameChoose(){
+function nameQuery(){
 
+	
+     if (processingRequest){
+     	return; // Another request already in progress
+     }
+    
+ 	processingRequest = true;
 	var chooseName = $('#chooseName :selected').text();
-  	console.log( "success" );
-  	 requestURL = requestURL = "cgi-bin/aggregate_query.cgi?"
+  
+ 	requestURL = requestURL = "cgi-bin/name_query.cgi?"
                 + "chooseName=" + chooseName ;
+    
+    jQuery.ajax(requestURL, {success: function(response) {
+	    //alert(response);
+	  }, complete: function() {processingRequest = false;} });
 }
 function generateVideo() {
   if ($("#fromDatePicker").val().length == 0 || $("#toDatePicker").val().length == 0) {

@@ -9,6 +9,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Vector;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -20,6 +21,13 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.geotools.function.Decompose;
+import org.geotools.function.Getgeom;
+import org.geotools.getName.GetFileName;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Polygon;
 
 public class MapServer extends AbstractHandler {
 	private static final Log LOG = LogFactory.getLog(MapServer.class);
@@ -47,7 +55,14 @@ public class MapServer extends AbstractHandler {
 				// TODO handle request
 				LOG.info("Received query request: "+target);
 				handleAggregateQuery(request, response);
-			} else {
+			}
+			else if(target.endsWith("/name_query.cgi")){
+				// TODO handle request
+				LOG.info("Received query request: "+target);
+				handleNameQuery(request, response);
+				
+			}
+			else {
 				if (target.equals("/"))
 					target = "/index.html";
 				tryToLoadStaticResource(target, response);
@@ -58,7 +73,36 @@ public class MapServer extends AbstractHandler {
 		}
 	}
 	
-	 private void handleAggregateQuery(HttpServletRequest request,
+	 private void handleNameQuery(HttpServletRequest request,
+		      HttpServletResponse response) throws ParseException, IOException {
+		    try {
+		      String name = request.getParameter("chooseName");
+		     	Geometry geometry=Getgeom.getgeom("China", GetFileName.vectorfoldpath+"/countries.shp", "CNTRY_NAME");
+				Coordinate[] coorGGG=geometry.getCoordinates();
+				Vector<Geometry> polygons=Decompose.get_decompose_array("China", GetFileName.vectorfoldpath+"/countries.shp", "CNTRY_NAME");
+				Polygon polygon2=(Polygon) polygons.get(0);
+				polygons.size();
+				 PrintWriter write = response.getWriter();
+		         write.write(geometry.toText());
+		         write.flush();
+		         write.close();
+				//				Geometry polygon2
+				Coordinate[] coor=polygon2.getCoordinates();
+				for (int i=0;i<coor.length;i++){
+					//System.out.println(coor[i].x+"/"+coor[i].y);
+				}
+		  
+		    } catch (Exception e) {
+			      response.setContentType("text/plain;charset=utf-8");
+			      PrintWriter writer = response.getWriter();
+			      e.printStackTrace(writer);
+			      writer.close();
+			      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			    }
+		   
+			  }
+
+	private void handleAggregateQuery(HttpServletRequest request,
 		      HttpServletResponse response) throws ParseException, IOException {
 		    try {
 		      String west = request.getParameter("min_lon");
@@ -71,6 +115,7 @@ public class MapServer extends AbstractHandler {
 		      String[] endDateParts = request.getParameter("toDate").split("/");
 		      String endDate = endDateParts[2] + '.' + endDateParts[0] + '.' + endDateParts[1];
 		      LOG.info("Date range "+startDate+", "+endDate);
+		      
 		      
 		      // Create the query parameters
 		      
@@ -103,7 +148,6 @@ public class MapServer extends AbstractHandler {
 		      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		    }
 		  }
-
 	/**
 	 * Tries to load the given resource name from class path if it exists.
 	 * Used to serve static files such as HTML pages, images and JavaScript files.
