@@ -51,7 +51,7 @@
     
   
      <label for="place">Place </label>
-     <select id="chooseName"  name="" onchange="changeVector()">   
+     <select id="chooseName"  name="" >   
  	<option value=" empty"  selected = "selected"></option>
  	</select>
  	
@@ -88,13 +88,14 @@
  </body>
 </html>
 <script>
-$( "select" )
-  .change(function () {
+changeVector()
+/*
+$( "select" ) .change(function () {
     var str = "";
-    $( "select option:selected" ).each(function() {
+    $( "#choosename option:selected" ).each(function() {
       //str += $( this ).text() + "qwe ";
     });
     //$( "div" ).text( str );
   })
-  .change();
+  .change();*/
 </script>

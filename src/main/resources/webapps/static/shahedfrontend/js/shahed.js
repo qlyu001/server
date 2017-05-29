@@ -176,8 +176,9 @@ function generateImage() {
 }
 
 
-var placelist= new Array();
+var placelist= new Array();//changeVector();
 function changeVector(){
+	
 	Ajax3();
 	addOption2();
 	nameQuery();
@@ -210,11 +211,11 @@ var Ajax3 = function ()
 }  
 
 function  addOption2(){setTimeout(function(){ 
-	//根据id查找对象，
+	//use id number to find obejct
 	
 	document.getElementById("chooseName").innerHTML = "";
 	var  obj=document.getElementById( 'chooseName' );
-	//添加一个选项
+	//add an option
 	
 	for(i=0;i<placelist.length;i++){
 	obj.add( new  Option( placelist[i] , placelist[i] ));
