@@ -6,6 +6,10 @@ var map;
 var rectangle;
 var rectangleIsDragged = false;
 
+//varaible for dealing with the rectangle in the map
+var saveResponse;
+var config,el,obj,wkt;
+
 function Fly2Destinaiton() {
   var address = document.getElementById("fly-to").value;
   geocoder.geocode({
@@ -25,7 +29,9 @@ function Fly2Destinaiton() {
 }
 
 // Create the draggable rectangle for the first time and initialize listeners
+/*
 function CreateRectangle() {
+*/
 /*
   var bounds = new google.maps.LatLngBounds(
      new google.maps.LatLng(0, 0),
@@ -38,6 +44,7 @@ function CreateRectangle() {
     draggable : true,
     editable : true
   });*/
+  /*
   //TODO: draw a polygon with several points and it need to fixed point
   // here I am there is two vector, one vector is for lattitude, another is for longtitude
   	var lat = [40.4250241,34.669359,32.472695,34.307144,36.509636,36.013561];
@@ -46,7 +53,7 @@ function CreateRectangle() {
   	for (i = 0; i < lat.length; i++) { 
     	triangleCoords.push( new google.maps.LatLng(lat[i], long[i]));
     	console.log( lat[i], long[i]);
-	}
+	}*/
 
   	/*
    	var triangleCoords = [
@@ -58,7 +65,7 @@ function CreateRectangle() {
     new google.maps.LatLng(36.013561, -116.520996),
     
     
-  ];*/
+  ];*//*
   	rectangle = new google.maps.Polygon({
     paths: triangleCoords,
     strokeColor: '#FF0000',
@@ -73,12 +80,13 @@ function CreateRectangle() {
   if ($("#results-panel").length > 0)
     google.maps.event.addListener(rectangle, 'bounds_changed', aggregateQuery);
 }
-
-// Move the draggable rectangle to a specific location on the map           
+*/
+// Move the draggable rectangle to a specific location on the map
+/*           
 function MoveRectangle(bounds) {
   rectangle.setMap(map); // Ensure it is visible if not
   rectangle.setBounds(bounds);
-}
+}*/
 
 // TODO This variable should be thread-safe
 var processingRequest = false;
@@ -223,6 +231,61 @@ function  addOption2(){setTimeout(function(){
 	
 },10); 
 }
+
+
+//this function is for display the polygon, more information see this link https://github.com/arthur-e/Wicket/blob/master/doc/index.html
+
+function displayPoly(){
+	
+	el = saveResponse;
+	//console.log(el.value);
+	wkt = new Wkt.Wkt();
+	config = this.map.defaults;
+   	//config.editable = editable;
+   	wkt.read(el);
+   	 var polyOptions = {
+        strokeColor: '#1E90FF',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: '#1E90FF',
+        fillOpacity: 0.35    
+    	};
+   	obj = wkt.toObject(this.map.defaults); // Make an object
+   	
+   	
+   	if (Wkt.isArray(obj)) { // Distinguish multigeometries (Arrays) from objects
+		for (i in obj) {
+			if (obj.hasOwnProperty(i) && !Wkt.isArray(obj[i])) {
+					//console.log(obj[i]);
+					obj[i].setMap(map);
+					
+				}
+				
+				
+		 	 if (wkt.type !== 'point') {
+                        // New vertex is inserted
+                        google.maps.event.addListener(obj[i].getPath(), 'insert_at', function (n) {
+                            //app.updateTextPart();
+                        });
+                        // Existing vertex is removed (insertion is undone)
+                        google.maps.event.addListener(obj[i].getPath(), 'remove_at', function (n) {
+                            //app.updateTextPart();
+                        });
+                        // Existing vertex is moved (set elsewhere)
+                        google.maps.event.addListener(obj[i].getPath(), 'set_at', function (n) {
+                            //app.updateTextPart();
+                        });
+                    }
+            console.log(this.features);   
+   			
+		}
+    } else {
+		obj.setMap(map); // Add it to the map
+        
+    }
+}
+
+
 function nameQuery(){
 
 	
@@ -237,9 +300,28 @@ function nameQuery(){
                 + "chooseName=" + chooseName ;
     
     jQuery.ajax(requestURL, {success: function(response) {
-	    alert(response);
+	   
+	    saveResponse=response;
+		displayPoly();
+	    // Instantiate Wicket
+   	    var wicket = new Wkt.Wkt();
+   	    wicket.read(response);
+	   // Assemble your new polygon's options, I used object notation
+	   /*
+       var polyOptions = {
+        strokeColor: '#1E90FF',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: '#1E90FF',
+        fillOpacity: 0.35    
+    	};
+    	
+    	var newPoly = wicket.toObject(polyOptions);  
+    	newPoly.setMap(map);*/
 	  }, complete: function() {processingRequest = false;} });
 }
+
+
 function generateVideo() {
   if ($("#fromDatePicker").val().length == 0 || $("#toDatePicker").val().length == 0) {
     alert('Please specify start and end date');
@@ -274,7 +356,9 @@ function generateVideo() {
                 + "&email=" + email;
   // Send using Ajax
   jQuery.ajax(requestURL, {success: function(response) {
+   
     alert(response);
+     app.mapIt()
   }});
 }
     
@@ -389,8 +473,8 @@ $(function () {
   });
   
   // Create and initialize the draggable rectangle on the map
-  CreateRectangle();
-  
+ // CreateRectangle();
+  changeVector();
   // Initialize the geocoder
   geocoder = new google.maps.Geocoder();
   
