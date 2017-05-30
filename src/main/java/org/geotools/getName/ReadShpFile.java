@@ -23,7 +23,7 @@ public class ReadShpFile {
 	//public static void main(String[]args) throws IOException{
 	JSONArray vectorlist = new JSONArray();
 	
-	String txtpath="/home/su/Desktop/withothertime/geoweb/src/main/webapp/placelist/"+name+".txt";
+	String txtpath="/home/qlyu001/workspace/server/src/main/resources/webapps/static/shahedfrontend/placelist/"+name+".txt";
 	File file = new File(path);
     DataStore dataStore = FileDataStoreFinder.getDataStore(file);
     String typeName = dataStore.getTypeNames()[0];

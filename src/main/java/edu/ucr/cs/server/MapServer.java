@@ -78,22 +78,28 @@ public class MapServer extends AbstractHandler {
 		      HttpServletResponse response) throws ParseException, IOException {
 		    try {
 		      String name = request.getParameter("chooseName");
-		     // System.out.println(name);
-		     	//Geometry geometry=Getgeom.getgeom("China", GetFileName.vectorfoldpath+"/countries.shp", "CNTRY_NAME");
-				//Coordinate[] coorGGG=geometry.getCoordinates();
-				//Vector<Geometry> polygons=Decompose.get_decompose_array("China", GetFileName.vectorfoldpath+"/countries.shp", "CNTRY_NAME");
-				//Polygon polygon2=(Polygon) polygons.get(0);
-				//polygons.size();
-				PrintWriter write = response.getWriter();
-				write.write(name);
-		         //write.write(geometry.toText());
-		         write.flush();
-		         write.close();
-				//				Geometry polygon2
+		       //System.out.println(name);
+		     
+		     	Geometry geometry=Getgeom.getgeom(name, GetFileName.vectorfoldpath+"/cb_2016_us_state_20m.shp", "NAME");
+		      //Geometry geometry=Getgeom.getgeom("China", GetFileName.vectorfoldpath+"/countries.shp", "CNTRY_NAME");
+				Coordinate[] coorGGG=geometry.getCoordinates();
+		     	PrintWriter write = response.getWriter();
+				//write.write(name);
+		     	 write.write(geometry.toText());
+		     	 /*
+				Vector<Geometry> polygons=Decompose.get_decompose_array(name, GetFileName.vectorfoldpath+"/cb_2016_us_state_20m.shp", "NAME");
+				Polygon polygon2=(Polygon) polygons.get(0);
+				polygons.size();
+				
+		         
+				//Geometry polygon2
 				Coordinate[] coor=polygon2.getCoordinates();
 				for (int i=0;i<coor.length;i++){
+					  write.write(coor[i].x+"/"+coor[i].y);
 					//System.out.println(coor[i].x+"/"+coor[i].y);
-				}
+				}*/
+				write.flush();
+		        write.close();
 		  
 		    } catch (Exception e) {
 			      response.setContentType("text/plain;charset=utf-8");

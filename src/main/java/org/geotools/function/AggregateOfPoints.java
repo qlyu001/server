@@ -3,7 +3,7 @@ package org.geotools.function;
 import java.awt.image.Raster;
 import java.io.IOException;
 import java.util.Vector;
-import org.geotools.method.query;
+
 import com.vividsolutions.jts.geom.Coordinate;
 
 public class AggregateOfPoints {

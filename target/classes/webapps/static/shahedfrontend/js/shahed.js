@@ -232,7 +232,7 @@ function nameQuery(){
     
  	processingRequest = true;
 	var chooseName = $('#chooseName :selected').val();
-   alert(chooseName);
+   //alert(chooseName);
  	requestURL = requestURL = "cgi-bin/name_query.cgi?"
                 + "chooseName=" + chooseName ;
     

@@ -1,1 +1,1 @@
-[{"list":"regions-20140306-100m.shp"},{"list":"countries.shp"},{"list":"cb_2016_us_state_20m.shp"},{"list":"regions-20140306-100m0.shp"}]
+[{"list":"regions-20140306-100m.shp"},{"list":"regions-20140306-100m0.shp"},{"list":"countries.shp"},{"list":"cb_2016_us_state_20m.shp"}]

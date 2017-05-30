@@ -25,7 +25,7 @@ public class geo {
 //		Geometry polygon2
 		Coordinate[] coor=polygon2.getCoordinates();
 		for (int i=0;i<coor.length;i++){
-			//System.out.println(coor[i].x+"/"+coor[i].y);
+			System.out.println(coor[i].x+"/"+coor[i].y);
 		}
 		
 	}
