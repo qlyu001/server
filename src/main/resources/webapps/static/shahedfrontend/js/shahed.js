@@ -479,7 +479,8 @@ $(function () {
   });*/
   
 
-	 map = new google.maps.Map(element, {
+
+   map = new google.maps.Map(element, {
     center : new google.maps.LatLng(39.502506, -98.356131),
     zoom : 5,
     mapTypeId : google.maps.MapTypeId.ROADMAP,
@@ -487,7 +488,7 @@ $(function () {
       mapTypeIds : mapTypeIds
     }
   });
-  
+  /*
   google.maps.event.addListener(map, 'click', function(event) {
     // Move the selection rectangle in the clicked location
     lat = event.latLng.lat();
@@ -502,7 +503,7 @@ $(function () {
       new google.maps.LatLng(lat + height, lng + width));
     
     //MoveRectangle(bounds);
-  });
+  });*/
   
   // Create and initialize the draggable rectangle on the map
  // CreateRectangle();
