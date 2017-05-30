@@ -219,7 +219,7 @@ var Ajax3 = function ()
 }  
 
 function  addOption2(){setTimeout(function(){ 
-	//use id number to find obejct
+	//use id number to find object
 	
 	document.getElementById("chooseName").innerHTML = "";
 	var  obj=document.getElementById( 'chooseName' );
@@ -276,7 +276,7 @@ function displayPoly(){
                             //app.updateTextPart();
                         });
                     }
-            console.log(this.features);   
+           // console.log(this.features);   
    			
 		}
     } else {
@@ -285,6 +285,28 @@ function displayPoly(){
     }
 }
 
+function clearPolygon(){
+
+	if(obj == null){
+		return;
+	}	
+   	if (Wkt.isArray(obj)) { // Distinguish multigeometries (Arrays) from objects
+		for (i in obj) {
+			if (obj.hasOwnProperty(i) && !Wkt.isArray(obj[i])) {
+					//console.log(obj[i]);
+					obj[i].setMap(null);
+					
+				}
+				
+		}
+    } else {
+		obj.setMap(null); // Add it to the map
+		
+	}
+        
+
+
+}
 
 function nameQuery(){
 
@@ -300,7 +322,7 @@ function nameQuery(){
                 + "chooseName=" + chooseName ;
     
     jQuery.ajax(requestURL, {success: function(response) {
-	   
+	    clearPolygon();
 	    saveResponse=response;
 		displayPoly();
 	    // Instantiate Wicket
@@ -446,8 +468,18 @@ $(function () {
   for (var type in google.maps.MapTypeId) {
     mapTypeIds.push(google.maps.MapTypeId[type]);
   }
-  
+  /*
   map = new google.maps.Map(element, {
+    center : new google.maps.LatLng(39.502506, -98.356131),
+    zoom : 5,
+    mapTypeId : google.maps.MapTypeId.ROADMAP,
+    mapTypeControlOptions : {
+      mapTypeIds : mapTypeIds
+    }
+  });*/
+  
+
+	 map = new google.maps.Map(element, {
     center : new google.maps.LatLng(39.502506, -98.356131),
     zoom : 5,
     mapTypeId : google.maps.MapTypeId.ROADMAP,
@@ -469,12 +501,12 @@ $(function () {
       new google.maps.LatLng(lat - height, lng - width),
       new google.maps.LatLng(lat + height, lng + width));
     
-    MoveRectangle(bounds);
+    //MoveRectangle(bounds);
   });
   
   // Create and initialize the draggable rectangle on the map
  // CreateRectangle();
-  changeVector();
+  
   // Initialize the geocoder
   geocoder = new google.maps.Geocoder();
   
