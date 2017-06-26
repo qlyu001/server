@@ -15,7 +15,9 @@ public class GetFileName
     public static void main(String[] args) throws IOException, CQLException
     {	
     	GetFileNameFunction getAndWrite=new GetFileNameFunction();
-    	
+    	ReadShpFile read =new ReadShpFile(); 
+    	//this is for creating a new placelist for the shp file
+    	read.readshape( vectorfoldpath+"/boundaries.shp","boundaries");
     	getAndWrite.getAndWriteName(vectorfilepath,vectorfoldpath,false);
     	getAndWrite.getAndWriteName(rasterfilepath,rasterfoldpath,true);
     	

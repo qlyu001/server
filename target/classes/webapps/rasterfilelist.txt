@@ -1,1 +1,1 @@
-[{"list":"us_aster.tif.aux.xml"},{"list":"asd.tif"}]
+[{"list":"us_aster.tif.aux.xml"}]

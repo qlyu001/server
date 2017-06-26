@@ -29,6 +29,7 @@ import org.geotools.getName.GetFileName;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
 public class MapServer extends AbstractHandler {
 	private static final Log LOG = LogFactory.getLog(MapServer.class);
@@ -63,6 +64,12 @@ public class MapServer extends AbstractHandler {
 				handleNameQuery(request, response);
 				
 			}
+			else if(target.endsWith("/data_query.cgi")){
+				// TODO handle request
+				LOG.info("Received query request: "+target);
+				handleNameQuery(request, response);
+				
+			}
 			else {
 				if (target.equals("/"))
 					target = "/index.html";
@@ -78,28 +85,41 @@ public class MapServer extends AbstractHandler {
 		      HttpServletResponse response) throws ParseException, IOException {
 		    try {
 		      String name = request.getParameter("chooseName");
-		       //System.out.println(name);
+		      String aNorth = request.getParameter("aNorth");
+		      String aEast = request.getParameter("aEast");
+		      String aSouth = request.getParameter("aSouth");
+		      String aWest = request.getParameter("aWest");
+		      String rWidth = request.getParameter("rWidth");
+		      String rHeight = request.getParameter("rHeight");
+		    
+		      //parse the number
+		      float North = Float.parseFloat(aNorth);
+		      float East = Float.parseFloat(aEast);
+		      float South = Float.parseFloat(aSouth);
+		      float West = Float.parseFloat(aWest);
+		      float Width = Float.parseFloat(rWidth);
+		      float Height = Float.parseFloat(rHeight);
+		      
+		      float pixelWidth =  (East - West)/Width;
+		      float pixelHeight = (North - South)/Height;
+		      float minimum = Math.min(pixelWidth,pixelHeight);
+		      minimum =  minimum*1000;
 		     
-		     	Geometry geometry=Getgeom.getgeom(name, GetFileName.vectorfoldpath+"/cb_2016_us_state_20m.shp", "NAME");
-		      //Geometry geometry=Getgeom.getgeom("China", GetFileName.vectorfoldpath+"/countries.shp", "CNTRY_NAME");
-				Coordinate[] coorGGG=geometry.getCoordinates();
-		     	PrintWriter write = response.getWriter();
-				//write.write(name);
-		     	 write.write(geometry.toText());
-		     	 /*
-				Vector<Geometry> polygons=Decompose.get_decompose_array(name, GetFileName.vectorfoldpath+"/cb_2016_us_state_20m.shp", "NAME");
-				Polygon polygon2=(Polygon) polygons.get(0);
-				polygons.size();
-				
-		         
-				//Geometry polygon2
-				Coordinate[] coor=polygon2.getCoordinates();
-				for (int i=0;i<coor.length;i++){
-					  write.write(coor[i].x+"/"+coor[i].y);
-					//System.out.println(coor[i].x+"/"+coor[i].y);
-				}*/
-				write.flush();
-		        write.close();
+		
+		      System.out.println(minimum);
+		      //get the polygon
+		     	//Geometry geometry=Getgeom.getgeom(name, GetFileName.vectorfoldpath+"/boundaries.shp", "NAME");
+		      //Geometry geometry=Getgeom.getgeom("China", GetFileName.vectorfoldpath+"/boundaries.shp", "CNTRY_NAME");
+		      Geometry geometry=Getgeom.getgeom(name, GetFileName.vectorfoldpath+"/boundaries.shp", "CNTRY_NAME");
+		      
+		    
+		     
+		      Geometry simple = TopologyPreservingSimplifier.simplify(geometry, minimum);
+		      PrintWriter write = response.getWriter();
+		      
+		      write.write(simple.toText());
+			  write.flush();
+		      write.close();
 		  
 		    } catch (Exception e) {
 			      response.setContentType("text/plain;charset=utf-8");
@@ -110,7 +130,24 @@ public class MapServer extends AbstractHandler {
 			    }
 		   
 			  }
-
+	 /*
+	 private void handleDataQuery(HttpServletRequest request,
+		      HttpServletResponse response) throws ParseException, IOException {
+		    try {
+		      String name = request.getParameter("chooseName");
+		       System.out.println(name);
+		     
+				
+		  
+		    } catch (Exception e) {
+			      response.setContentType("text/plain;charset=utf-8");
+			      PrintWriter writer = response.getWriter();
+			      e.printStackTrace(writer);
+			      writer.close();
+			      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			    }
+		   
+			  }*/
 	private void handleAggregateQuery(HttpServletRequest request,
 		      HttpServletResponse response) throws ParseException, IOException {
 		    try {

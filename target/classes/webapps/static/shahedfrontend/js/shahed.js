@@ -5,7 +5,14 @@ var map;
 // The draggable rectangle on the map
 var rectangle;
 var rectangleIsDragged = false;
-
+var features;
+var aNorth;   
+var aEast;
+var aSouth;   
+var aWest;  
+var $map;
+var rWidth;
+var rHeight;
 //varaible for dealing with the rectangle in the map
 var saveResponse;
 var config,el,obj,wkt;
@@ -90,7 +97,7 @@ function MoveRectangle(bounds) {
 
 // TODO This variable should be thread-safe
 var processingRequest = false;
-
+var dataRequest = false;
 // Process the request by submitting it to the backend server
 function aggregateQuery(){
   if (rectangleIsDragged)
@@ -185,6 +192,7 @@ function generateImage() {
 
 
 var placelist= new Array();//changeVector();
+
 function changeVector(){
 	
 	Ajax3();
@@ -199,7 +207,7 @@ var Ajax3 = function ()
    //var name= "countries.shp"
    
   
-    $.getJSON ("placelist/cb_2016_us_state_20m.shp.txt", function (data)  
+    $.getJSON ("placelist/boundaries.shp.txt", function (data)  
     { 
       	
         $.each (data, function (i, item)  
@@ -235,6 +243,7 @@ function  addOption2(){setTimeout(function(){
 
 //this function is for display the polygon, more information see this link https://github.com/arthur-e/Wicket/blob/master/doc/index.html
 
+
 function displayPoly(){
 	
 	el = saveResponse;
@@ -250,7 +259,9 @@ function displayPoly(){
         fillColor: '#1E90FF',
         fillOpacity: 0.35    
     	};
+    	
    	obj = wkt.toObject(this.map.defaults); // Make an object
+   	var temp = wkt.toJson(); 
    	
    	
    	if (Wkt.isArray(obj)) { // Distinguish multigeometries (Arrays) from objects
@@ -261,21 +272,7 @@ function displayPoly(){
 					
 				}
 				
-				
-		 	 if (wkt.type !== 'point') {
-                        // New vertex is inserted
-                        google.maps.event.addListener(obj[i].getPath(), 'insert_at', function (n) {
-                            //app.updateTextPart();
-                        });
-                        // Existing vertex is removed (insertion is undone)
-                        google.maps.event.addListener(obj[i].getPath(), 'remove_at', function (n) {
-                            //app.updateTextPart();
-                        });
-                        // Existing vertex is moved (set elsewhere)
-                        google.maps.event.addListener(obj[i].getPath(), 'set_at', function (n) {
-                            //app.updateTextPart();
-                        });
-                    }
+			
            // console.log(this.features);   
    			
 		}
@@ -283,8 +280,11 @@ function displayPoly(){
 		obj.setMap(map); // Add it to the map
         
     }
+    
+    //console.log(temp);
+   
+    //map.fitBounds(temp.getBounce());
 }
-
 function clearPolygon(){
 
 	if(obj == null){
@@ -317,17 +317,46 @@ function nameQuery(){
     
  	processingRequest = true;
 	var chooseName = $('#chooseName :selected').val();
-   //alert(chooseName);
- 	requestURL = requestURL = "cgi-bin/name_query.cgi?"
-                + "chooseName=" + chooseName ;
+    //alert(chooseName);
+    aNorth  =   map.getBounds().getNorthEast().lat();   
+    aEast   =   map.getBounds().getNorthEast().lng();
+    aSouth  =   map.getBounds().getSouthWest().lat();   
+    aWest   =   map.getBounds().getSouthWest().lng();  
     
+    $map = $('#map');
+
+	mapDim = {
+    		height: $map.height(),
+    		width: $map.width()
+	}
+	    
+
+    rWidth =  $map.width();
+    rHeight = $map.height();
+    
+    
+ 	requestURL = requestURL = "cgi-bin/name_query.cgi?"
+                + "chooseName=" + chooseName 
+                + "&aNorth=" + aNorth
+                + "&aEast=" + aEast
+                + "&aSouth=" + aSouth
+                + "&aWest=" + aWest
+                + "&rWidth=" + rWidth
+                + "&rHeight=" + rHeight; 
+    
+   
+                
+                
     jQuery.ajax(requestURL, {success: function(response) {
+    	//alert(response);
 	    clearPolygon();
 	    saveResponse=response;
+	   
 		displayPoly();
 	    // Instantiate Wicket
    	    var wicket = new Wkt.Wkt();
    	    wicket.read(response);
+   	    //dataQuery();
 	   // Assemble your new polygon's options, I used object notation
 	   /*
        var polyOptions = {
@@ -343,7 +372,26 @@ function nameQuery(){
 	  }, complete: function() {processingRequest = false;} });
 }
 
+/*
+function dataQuery(){
 
+	
+     if (dataRequest){
+     	return; // Another request already in progress
+     }
+    
+ 	dataRequest = true;
+	var chooseName = $('#chooseName :selected').val();
+   //alert(chooseName);
+ 	requestURL = requestURL = "cgi-bin/data_query.cgi?"
+                + "chooseName=" + chooseName ;
+    
+    jQuery.ajax(requestURL, {success: function(response) {
+	  
+	   
+	  }, complete: function() {dataRequest = false;} });
+}
+*/
 function generateVideo() {
   if ($("#fromDatePicker").val().length == 0 || $("#toDatePicker").val().length == 0) {
     alert('Please specify start and end date');
@@ -379,7 +427,7 @@ function generateVideo() {
   // Send using Ajax
   jQuery.ajax(requestURL, {success: function(response) {
    
-    alert(response);
+    //alert(response);
      app.mapIt()
   }});
 }
@@ -408,7 +456,6 @@ $(function () {
       Fly2Destinaiton();
     }
   });
-
   // Initialize global Ajax handler to show the wait icon
   jQuery(document).ajaxStart( function() {
     jQuery("#modal").show();
@@ -472,6 +519,10 @@ $(function () {
   map = new google.maps.Map(element, {
     center : new google.maps.LatLng(39.502506, -98.356131),
     zoom : 5,
+    zoomControlOptions: {
+                    position: google.maps.ControlPosition.LEFT_TOP,
+                    style: google.maps.ZoomControlStyle.SMALL
+                }
     mapTypeId : google.maps.MapTypeId.ROADMAP,
     mapTypeControlOptions : {
       mapTypeIds : mapTypeIds
@@ -488,6 +539,24 @@ $(function () {
       mapTypeIds : mapTypeIds
     }
   });
+  
+   map.drawingManager = new google.maps.drawing.DrawingManager({
+                drawingControlOptions: {
+                    position: google.maps.ControlPosition.TOP_CENTER,
+                    drawingModes: [
+                        google.maps.drawing.OverlayType.MARKER,
+                        google.maps.drawing.OverlayType.POLYLINE,
+                        google.maps.drawing.OverlayType.POLYGON,
+                        google.maps.drawing.OverlayType.RECTANGLE
+                    ]
+                },
+                markerOptions: map.defaults,
+                polygonOptions: map.defaults,
+                polylineOptions: map.defaults,
+                rectangleOptions: map.defaults
+            });
+   map.drawingManager.setMap(map);
+  
   /*
   google.maps.event.addListener(map, 'click', function(event) {
     // Move the selection rectangle in the clicked location
