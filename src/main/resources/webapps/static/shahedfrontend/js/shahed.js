@@ -13,6 +13,11 @@ var aWest;
 var $map;
 var rWidth;
 var rHeight;
+var t1;
+var t0;
+var time1;
+var time2;
+
 //varaible for dealing with the rectangle in the map
 var saveResponse;
 var config,el,obj,wkt;
@@ -259,12 +264,15 @@ function displayPoly(){
         fillColor: '#1E90FF',
         fillOpacity: 0.35    
     	};
-    	
+    t0 = performance.now();	
    	obj = wkt.toObject(this.map.defaults); // Make an object
-   	var temp = wkt.toJson(); 
-   	
+   	t1 = performance.now();
+   	console.log("changing it into a wkt object takes " + (t1 - t0) + " milliseconds.")
+
    	
    	if (Wkt.isArray(obj)) { // Distinguish multigeometries (Arrays) from objects
+   	
+   		t0 = performance.now();
 		for (i in obj) {
 			if (obj.hasOwnProperty(i) && !Wkt.isArray(obj[i])) {
 					//console.log(obj[i]);
@@ -276,9 +284,14 @@ function displayPoly(){
            // console.log(this.features);   
    			
 		}
+		t1 = performance.now();
+		console.log("time to parse the polygon at the client side  and add the polygon to the map " + (t1 - t0) + " milliseconds.")
     } else {
+    
+    	t0 = performance.now();
 		obj.setMap(map); // Add it to the map
-        
+        t1 = performance.now();
+		console.log("time to parse the polygon at the client side  and add the polygon to the map" + (t1 - t0) + " milliseconds.")
     }
     
     //console.log(temp);
@@ -309,7 +322,7 @@ function clearPolygon(){
 }
 
 function nameQuery(){
-
+	var start_time = new Date().getTime();
 	
      if (processingRequest){
      	return; // Another request already in progress
@@ -345,17 +358,18 @@ function nameQuery(){
                 + "&rHeight=" + rHeight; 
     
    
-                
+              
                 
     jQuery.ajax(requestURL, {success: function(response) {
     	//alert(response);
-	    clearPolygon();
-	    saveResponse=response;
+     time0 = performance.now();   
+	   clearPolygon();
+	   saveResponse=response;
 	   
 		displayPoly();
 	    // Instantiate Wicket
-   	    var wicket = new Wkt.Wkt();
-   	    wicket.read(response);
+   	    //var wicket = new Wkt.Wkt();
+   	    //wicket.read(response);
    	    //dataQuery();
 	   // Assemble your new polygon's options, I used object notation
 	   /*
@@ -369,7 +383,14 @@ function nameQuery(){
     	
     	var newPoly = wicket.toObject(polyOptions);  
     	newPoly.setMap(map);*/
+    	 time1 =  performance.now();
+    	var request_time = new Date().getTime() - start_time;
+      console.log("total request time" + request_time + " milliseconds.")
+	  console.log("front end display time" + (time1 - time0) + " milliseconds.")
+    	 
 	  }, complete: function() {processingRequest = false;} });
+	  
+	
 }
 
 /*
@@ -515,6 +536,7 @@ $(function () {
   for (var type in google.maps.MapTypeId) {
     mapTypeIds.push(google.maps.MapTypeId[type]);
   }
+  
   /*
   map = new google.maps.Map(element, {
     center : new google.maps.LatLng(39.502506, -98.356131),
@@ -576,6 +598,26 @@ $(function () {
   
   // Create and initialize the draggable rectangle on the map
  // CreateRectangle();
+  // google.maps.event.addListener(map, "bounds_changed", mapSettleTime); 
+   
+   
+   google.maps.event.addListener(map, 'zoom_changed', function(event) {
+   		if(saveResponse != null){
+        //alert("Something Found"); 
+        nameQuery();
+      }
+    	
+  });
+
+
+   google.maps.event.addListener(map, 'bounds_changed', function(event) {
+      if(saveResponse != null){
+        //alert("Something Found"); 
+        nameQuery();
+      }
+      
+  });
+  
   
   // Initialize the geocoder
   geocoder = new google.maps.Geocoder();

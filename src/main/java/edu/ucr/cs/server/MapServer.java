@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.geolatte.maprenderer.shape.PolygonWrapper;
 import org.geotools.function.Decompose;
 import org.geotools.function.Getgeom;
 import org.geotools.getName.GetFileName;
@@ -28,8 +29,12 @@ import org.geotools.getName.GetFileName;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
+
+
 
 public class MapServer extends AbstractHandler {
 	private static final Log LOG = LogFactory.getLog(MapServer.class);
@@ -84,42 +89,74 @@ public class MapServer extends AbstractHandler {
 	 private void handleNameQuery(HttpServletRequest request,
 		      HttpServletResponse response) throws ParseException, IOException {
 		    try {
-		      String name = request.getParameter("chooseName");
-		      String aNorth = request.getParameter("aNorth");
-		      String aEast = request.getParameter("aEast");
-		      String aSouth = request.getParameter("aSouth");
-		      String aWest = request.getParameter("aWest");
-		      String rWidth = request.getParameter("rWidth");
-		      String rHeight = request.getParameter("rHeight");
+		       String name = request.getParameter("chooseName");
+		       String aNorth = request.getParameter("aNorth");
+		       String aEast = request.getParameter("aEast");
+		       String aSouth = request.getParameter("aSouth");
+		       String aWest = request.getParameter("aWest");
+		       String rWidth = request.getParameter("rWidth");
+		       String rHeight = request.getParameter("rHeight");
 		    
-		      //parse the number
-		      float North = Float.parseFloat(aNorth);
-		      float East = Float.parseFloat(aEast);
-		      float South = Float.parseFloat(aSouth);
-		      float West = Float.parseFloat(aWest);
-		      float Width = Float.parseFloat(rWidth);
-		      float Height = Float.parseFloat(rHeight);
+		       //parse the number
+		       float North = Float.parseFloat(aNorth);
+		       float East = Float.parseFloat(aEast);
+		       float South = Float.parseFloat(aSouth);
+		       float West = Float.parseFloat(aWest);
+		       float Width = Float.parseFloat(rWidth);
+		       float Height = Float.parseFloat(rHeight);
 		      
-		      float pixelWidth =  (East - West)/Width;
-		      float pixelHeight = (North - South)/Height;
-		      float minimum = Math.min(pixelWidth,pixelHeight);
-		      minimum =  minimum*1000;
+		       float pixelWidth =  (East - West)/Width;
+		       float pixelHeight = (North - South)/Height;
+		       float minimum = Math.min(pixelWidth,pixelHeight);
+		       //minimum *= 64;
 		     
-		
-		      System.out.println(minimum);
-		      //get the polygon
-		     	//Geometry geometry=Getgeom.getgeom(name, GetFileName.vectorfoldpath+"/boundaries.shp", "NAME");
-		      //Geometry geometry=Getgeom.getgeom("China", GetFileName.vectorfoldpath+"/boundaries.shp", "CNTRY_NAME");
-		      Geometry geometry=Getgeom.getgeom(name, GetFileName.vectorfoldpath+"/boundaries.shp", "CNTRY_NAME");
+		       System.out.println("country name "+ name);
+		       System.out.println("minimum value " + minimum);
+		       System.out.println(North);
+		       //get the polygon
+		       //Geometry geometry=Getgeom.getgeom(name, GetFileName.vectorfoldpath+"/boundaries.shp", "NAME");
+		       //Geometry geometry=Getgeom.getgeom("China", GetFileName.vectorfoldpath+"/boundaries.shp", "CNTRY_NAME");
 		      
-		    
+
+		       long startTime = System.currentTimeMillis();
+
+		       Geometry geometry=Getgeom.getgeom(name, GetFileName.vectorfoldpath+"/boundaries.shp", "CNTRY_NAME");
+		      
+			   long endTime = System.currentTimeMillis();
+			   long duration=endTime-startTime;
+			  
+			   //this function will return double 
+			   System.out.println("Area of the geometry" + geometry.getArea());
+			   System.out.println("time it take to read the polygon from the shapefile" + duration);
 		     
-		      Geometry simple = TopologyPreservingSimplifier.simplify(geometry, minimum);
-		      PrintWriter write = response.getWriter();
 		      
-		      write.write(simple.toText());
-			  write.flush();
-		      write.close();
+		       //x-coordinate is the longitude and the y-coordinate is the latitude.
+			   //this part create a rectangle and than intersect it with the whole geometry and then simplify it 
+			   
+		       long startTime1 = System.currentTimeMillis();
+		       GeometryFactory geomFact =  new GeometryFactory();
+		       Coordinate[] coordinates = new Coordinate[5];
+		       coordinates[0] = new Coordinate(West,South);
+		       coordinates[1] = new Coordinate(West, North);
+		       coordinates[2] = new Coordinate(East, North);
+		       coordinates[3] = new Coordinate(East, South);
+		       coordinates[4] = new Coordinate(West, South);
+		       LinearRing lr = geomFact.createLinearRing(coordinates);
+		       Polygon rectangleBound = geomFact.createPolygon(lr, new LinearRing[]{}); 
+		       // System.out.println("Area of the square "+rectangleBound.getArea());
+		       Geometry intersection = rectangleBound.intersection(geometry);
+		       System.out.println("Area of the intersection "+intersection.getArea());
+		       Geometry simple = TopologyPreservingSimplifier.simplify(intersection, minimum);
+		       long endTime1 = System.currentTimeMillis();
+		       long duration1=endTime1-startTime1;
+		       System.out.println("time to simplify the polygon" + duration1);
+		       System.out.println("Area of the simply geometry "+simple.getArea());
+		       
+		       //write the final result to the font end
+		       PrintWriter write = response.getWriter();
+		       write.write(simple.toText());
+			   write.flush();
+		       write.close();
 		  
 		    } catch (Exception e) {
 			      response.setContentType("text/plain;charset=utf-8");
