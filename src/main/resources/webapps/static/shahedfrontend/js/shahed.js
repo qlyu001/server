@@ -17,7 +17,8 @@ var t1;
 var t0;
 var time1;
 var time2;
-
+var countResponse = 0;
+var countReceive;
 //varaible for dealing with the rectangle in the map
 var saveResponse;
 var config,el,obj,wkt;
@@ -251,19 +252,19 @@ function  addOption2(){setTimeout(function(){
 
 function displayPoly(){
 	
-	el = saveResponse;
-	//console.log(el.value);
-	wkt = new Wkt.Wkt();
-	config = this.map.defaults;
-   	//config.editable = editable;
-   	wkt.read(el);
-   	 var polyOptions = {
+	 el = saveResponse;
+	 //console.log(el.value);
+	 wkt = new Wkt.Wkt();
+	 config = this.map.defaults;
+   //config.editable = editable;
+   wkt.read(el);
+   var polyOptions = {
         strokeColor: '#1E90FF',
         strokeOpacity: 0.8,
         strokeWeight: 2,
         fillColor: '#1E90FF',
         fillOpacity: 0.35    
-    	};
+    };
     t0 = performance.now();	
    	obj = wkt.toObject(this.map.defaults); // Make an object
    	t1 = performance.now();
@@ -273,25 +274,25 @@ function displayPoly(){
    	if (Wkt.isArray(obj)) { // Distinguish multigeometries (Arrays) from objects
    	
    		t0 = performance.now();
-		for (i in obj) {
-			if (obj.hasOwnProperty(i) && !Wkt.isArray(obj[i])) {
-					//console.log(obj[i]);
-					obj[i].setMap(map);
+		  for (i in obj) {
+			   if (obj.hasOwnProperty(i) && !Wkt.isArray(obj[i])) {
+					   //console.log(obj[i]);
+					   obj[i].setMap(map);
 					
-				}
-				
-			
-           // console.log(this.features);   
+				  }
+          // console.log(this.features);   
    			
 		}
+
 		t1 = performance.now();
 		console.log("time to parse the polygon at the client side  and add the polygon to the map " + (t1 - t0) + " milliseconds.")
+
     } else {
     
     	t0 = performance.now();
-		obj.setMap(map); // Add it to the map
-        t1 = performance.now();
-		console.log("time to parse the polygon at the client side  and add the polygon to the map" + (t1 - t0) + " milliseconds.")
+		  obj.setMap(map); // Add it to the map
+      t1 = performance.now();
+		  console.log("time to parse the polygon at the client side  and add the polygon to the map" + (t1 - t0) + " milliseconds.")
     }
     
     //console.log(temp);
@@ -301,18 +302,19 @@ function displayPoly(){
 function clearPolygon(){
 
 	if(obj == null){
-		return;
+		  return;
 	}	
-   	if (Wkt.isArray(obj)) { // Distinguish multigeometries (Arrays) from objects
+  if (Wkt.isArray(obj)) { // Distinguish multigeometries (Arrays) from objects
 		for (i in obj) {
+
 			if (obj.hasOwnProperty(i) && !Wkt.isArray(obj[i])) {
 					//console.log(obj[i]);
 					obj[i].setMap(null);
 					
-				}
+			}
 				
-		}
-    } else {
+	  }
+  } else {
 		obj.setMap(null); // Add it to the map
 		
 	}
@@ -323,6 +325,7 @@ function clearPolygon(){
 
 function nameQuery(){
 	var start_time = new Date().getTime();
+  countResponse = countResponse + 1;
 	
      if (processingRequest){
      	return; // Another request already in progress
@@ -348,6 +351,7 @@ function nameQuery(){
     rHeight = $map.height();
     
     
+  //alert(countResponse); 
  	requestURL = requestURL = "cgi-bin/name_query.cgi?"
                 + "chooseName=" + chooseName 
                 + "&aNorth=" + aNorth
@@ -356,37 +360,42 @@ function nameQuery(){
                 + "&aWest=" + aWest
                 + "&rWidth=" + rWidth
                 + "&rHeight=" + rHeight; 
+                + "&countResponse=" + countResponse; 
     
    
               
                 
     jQuery.ajax(requestURL, {success: function(response) {
     	//alert(response);
-     time0 = performance.now();   
-	   clearPolygon();
-	   saveResponse=response;
-	   
-		displayPoly();
-	    // Instantiate Wicket
-   	    //var wicket = new Wkt.Wkt();
-   	    //wicket.read(response);
-   	    //dataQuery();
-	   // Assemble your new polygon's options, I used object notation
-	   /*
-       var polyOptions = {
+
+    	clearPolygon();
+      saveResponse=response;
+    	if(saveResponse != '0'){
+        //alert(saveResponse); 
+        time0 = performance.now();     
+        displayPoly();
+        // Instantiate Wicket
+        //var wicket = new Wkt.Wkt();
+        //wicket.read(response);
+        //dataQuery();
+        // Assemble your new polygon's options, I used object notation
+        /*
+        var polyOptions = {
         strokeColor: '#1E90FF',
         strokeOpacity: 0.8,
         strokeWeight: 2,
         fillColor: '#1E90FF',
         fillOpacity: 0.35    
-    	};
-    	
-    	var newPoly = wicket.toObject(polyOptions);  
-    	newPoly.setMap(map);*/
-    	 time1 =  performance.now();
-    	var request_time = new Date().getTime() - start_time;
-      console.log("total request time" + request_time + " milliseconds.")
-	  console.log("front end display time" + (time1 - time0) + " milliseconds.")
+        };
+      
+        var newPoly = wicket.toObject(polyOptions);  
+        newPoly.setMap(map);*/
+        time1 =  performance.now();
+        var request_time = new Date().getTime() - start_time;
+        console.log("total request time" + request_time + " milliseconds.")
+        console.log("front end display time" + (time1 - time0) + " milliseconds.")
+      }
+    
     	 
 	  }, complete: function() {processingRequest = false;} });
 	  

@@ -12,6 +12,7 @@
 		<hibernate.version>5.1.0.Final</hibernate.version>
 		<org.aspectj-version>1.8.0</org.aspectj-version>
 		<org.slf4j-version>1.7.12</org.slf4j-version>
+		 <hadoop.version>2.8.0</hadoop.version>
 	</properties>
   <dependencies>
 	<!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server -->
@@ -50,6 +51,13 @@
 			<version>3.8.1</version>
 			<scope>test</scope>
 		</dependency>
+		
+		 <dependency>
+     		<groupId>org.codehaus.jackson</groupId>
+      		<artifactId>jackson-mapper-asl</artifactId>
+      		<version>1.9.13</version>
+   		 </dependency>
+    
 		<dependency>
 			<groupId>org.geotools</groupId>
 			<artifactId>gt-coverage</artifactId>
@@ -160,6 +168,28 @@
   <version>20090211</version>
 </dependency>	
 
+ <!-- The following two artifacts are added to be able to read files directly from HDFS (in the future) -->
+    <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <version>${hadoop.version}</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-hdfs -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-hdfs</artifactId>
+      <version>${hadoop.version}</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
+    <dependency>
+      <groupId>commons-cli</groupId>
+      <artifactId>commons-cli</artifactId>
+      <version>1.4</version>
+    </dependency>
+    
 <!-- https://mvnrepository.com/artifact/org.apache.wicket/wicket-core -->
 <dependency>
     <groupId>org.apache.wicket</groupId>

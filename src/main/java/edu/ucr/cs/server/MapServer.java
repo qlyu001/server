@@ -104,12 +104,36 @@ public class MapServer extends AbstractHandler {
 		       float West = Float.parseFloat(aWest);
 		       float Width = Float.parseFloat(rWidth);
 		       float Height = Float.parseFloat(rHeight);
-		      
+		       float number = Float.parseFloat("10.0");
+		       float calculateWidth = (East - West)/number;
+		       float calculateHeight = (North - South)/number;
 		       float pixelWidth =  (East - West)/Width;
 		       float pixelHeight = (North - South)/Height;
 		       float minimum = Math.min(pixelWidth,pixelHeight);
 		       //minimum *= 64;
-		     
+		       
+		        /*
+  google.maps.event.addListener(map, 'click', function(event) {
+    // Move the selection rectangle in the clicked location
+    lat = event.latLng.lat();
+    lng = event.latLng.lng();
+  
+    var ne = map.getBounds().getNorthEast();
+    var sw = map.getBounds().getSouthWest();
+    var width = (ne.lng() - sw.lng()) / 10.0;
+    var height = (ne.lat() - sw.lat()) / 10.0;
+    bounds = new google.maps.LatLngBounds(
+      new google.maps.LatLng(lat - height, lng - width),
+      new google.maps.LatLng(lat + height, lng + width));
+    
+    //MoveRectangle(bounds);
+  });
+	aNorth  =   map.getBounds().getNorthEast().lat();   
+    aEast   =   map.getBounds().getNorthEast().lng();
+    aSouth  =   map.getBounds().getSouthWest().lat();   
+    aWest   =   map.getBounds().getSouthWest().lng(); 
+
+  */
 		       System.out.println("country name "+ name);
 		       System.out.println("minimum value " + minimum);
 		       System.out.println(North);
@@ -132,15 +156,16 @@ public class MapServer extends AbstractHandler {
 		      
 		       //x-coordinate is the longitude and the y-coordinate is the latitude.
 			   //this part create a rectangle and than intersect it with the whole geometry and then simplify it 
-			   
+			    
+
 		       long startTime1 = System.currentTimeMillis();
 		       GeometryFactory geomFact =  new GeometryFactory();
 		       Coordinate[] coordinates = new Coordinate[5];
-		       coordinates[0] = new Coordinate(West,South);
-		       coordinates[1] = new Coordinate(West, North);
-		       coordinates[2] = new Coordinate(East, North);
-		       coordinates[3] = new Coordinate(East, South);
-		       coordinates[4] = new Coordinate(West, South);
+		       coordinates[0] = new Coordinate(West - calculateWidth, South - calculateHeight);
+		       coordinates[1] = new Coordinate(West - calculateWidth, North + calculateHeight);
+		       coordinates[2] = new Coordinate(East + calculateWidth, North + calculateHeight);
+		       coordinates[3] = new Coordinate(East + calculateWidth, South - calculateHeight);
+		       coordinates[4] = new Coordinate(West - calculateWidth, South - calculateHeight);
 		       LinearRing lr = geomFact.createLinearRing(coordinates);
 		       Polygon rectangleBound = geomFact.createPolygon(lr, new LinearRing[]{}); 
 		       // System.out.println("Area of the square "+rectangleBound.getArea());
@@ -154,7 +179,14 @@ public class MapServer extends AbstractHandler {
 		       
 		       //write the final result to the font end
 		       PrintWriter write = response.getWriter();
-		       write.write(simple.toText());
+		       
+		       
+		       if(simple.isEmpty()){
+		    	   write.write('0');
+		       }else{
+		    	   write.write(simple.toText());
+		       }
+		       //write.write(simple.toText());
 			   write.flush();
 		       write.close();
 		  
