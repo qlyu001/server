@@ -168,20 +168,6 @@
   <version>20090211</version>
 </dependency>	
 
- <!-- The following two artifacts are added to be able to read files directly from HDFS (in the future) -->
-    <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common -->
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
-      <version>${hadoop.version}</version>
-    </dependency>
-
-    <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-hdfs -->
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-hdfs</artifactId>
-      <version>${hadoop.version}</version>
-    </dependency>
 
     <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
     <dependency>
@@ -190,39 +176,61 @@
       <version>1.4</version>
     </dependency>
     
-<!-- https://mvnrepository.com/artifact/org.apache.wicket/wicket-core -->
-<dependency>
-    <groupId>org.apache.wicket</groupId>
-    <artifactId>wicket-core</artifactId>
-    <version>7.7.0</version>
-</dependency>
-<!-- https://mvnrepository.com/artifact/org.apache.wicket/wicket-extensions -->
-<dependency>
-    <groupId>org.apache.wicket</groupId>
-    <artifactId>wicket-extensions</artifactId>
-    <version>7.7.0</version>
-</dependency>
-<!-- https://mvnrepository.com/artifact/org.apache.wicket/wicket-spring -->
-<dependency>
-    <groupId>org.apache.wicket</groupId>
-    <artifactId>wicket-spring</artifactId>
-    <version>7.7.0</version>
-</dependency>
+	<!-- https://mvnrepository.com/artifact/org.apache.wicket/wicket-core -->
+	<dependency>
+    	<groupId>org.apache.wicket</groupId>
+    	<artifactId>wicket-core</artifactId>
+    	<version>7.7.0</version>
+	</dependency>
+	<!-- https://mvnrepository.com/artifact/org.apache.wicket/wicket-extensions -->
+	<dependency>
+   	 	<groupId>org.apache.wicket</groupId>
+    	<artifactId>wicket-extensions</artifactId>
+    	<version>7.7.0</version>
+	</dependency>
+	<!-- https://mvnrepository.com/artifact/org.apache.wicket/wicket-spring -->
+	<dependency>
+    	<groupId>org.apache.wicket</groupId>
+    	<artifactId>wicket-spring</artifactId>
+    	<version>7.7.0</version>
+	</dependency>
 
-<!-- https://mvnrepository.com/artifact/org.webjars/jsts -->
-<dependency>
-    <groupId>org.webjars</groupId>
-    <artifactId>jsts</artifactId>
-    <version>0.14.0</version>
-</dependency>
+	<!-- https://mvnrepository.com/artifact/org.webjars/jsts -->
+	<dependency>
+    	<groupId>org.webjars</groupId>
+    	<artifactId>jsts</artifactId>
+    	<version>0.14.0</version>
+	</dependency>
 
 
-<dependency>
-    <groupId>com.googlecode.json-simple</groupId>
-    <artifactId>json-simple</artifactId>
-    <version>1.1</version>
-</dependency>	  
-  </dependencies>
+	<dependency>
+    	<groupId>com.googlecode.json-simple</groupId>
+    	<artifactId>json-simple</artifactId>
+ 	   <version>1.1</version>
+	</dependency>	
+	
+	 <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>2.8.0</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-hdfs -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>2.8.0</version>
+        </dependency>
+		
+		<dependency>
+			<groupId>jdk.tools</groupId>
+			<artifactId>jdk.tools</artifactId>
+			<version>1.7.0_05</version>
+			<scope>system</scope>
+			<systemPath>/home/qlyu001/jdk1.8.0_131/lib/tools.jar</systemPath>
+		</dependency>  
+ </dependencies>
   
   <repositories>
 		<repository>

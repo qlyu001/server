@@ -9,8 +9,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Vector;
-
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -18,16 +16,16 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.wicket.ajax.json.JSONObject;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.geolatte.maprenderer.shape.PolygonWrapper;
-import org.geotools.function.Decompose;
 import org.geotools.function.Getgeom;
 import org.geotools.getName.GetFileName;
 
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
@@ -75,6 +73,12 @@ public class MapServer extends AbstractHandler {
 				handleNameQuery(request, response);
 				
 			}
+			else if(target.endsWith("/first_query.cgi")){
+				// TODO handle request
+				LOG.info("Received query request: "+target);
+				handleFirstQuery(request,response);
+				
+			}
 			else {
 				if (target.equals("/"))
 					target = "/index.html";
@@ -96,7 +100,9 @@ public class MapServer extends AbstractHandler {
 		       String aWest = request.getParameter("aWest");
 		       String rWidth = request.getParameter("rWidth");
 		       String rHeight = request.getParameter("rHeight");
-		    
+		       String countResponse = request.getParameter("countResponse");
+		       String firstLoad = request.getParameter("firstLoad");
+		       System.out.println(countResponse);
 		       //parse the number
 		       float North = Float.parseFloat(aNorth);
 		       float East = Float.parseFloat(aEast);
@@ -148,47 +154,138 @@ public class MapServer extends AbstractHandler {
 		      
 			   long endTime = System.currentTimeMillis();
 			   long duration=endTime-startTime;
-			  
+			   
 			   //this function will return double 
 			   System.out.println("Area of the geometry" + geometry.getArea());
 			   System.out.println("time it take to read the polygon from the shapefile" + duration);
 		     
-		      
 		       //x-coordinate is the longitude and the y-coordinate is the latitude.
 			   //this part create a rectangle and than intersect it with the whole geometry and then simplify it 
-			    
-
-		       long startTime1 = System.currentTimeMillis();
-		       GeometryFactory geomFact =  new GeometryFactory();
-		       Coordinate[] coordinates = new Coordinate[5];
-		       coordinates[0] = new Coordinate(West - calculateWidth, South - calculateHeight);
-		       coordinates[1] = new Coordinate(West - calculateWidth, North + calculateHeight);
-		       coordinates[2] = new Coordinate(East + calculateWidth, North + calculateHeight);
-		       coordinates[3] = new Coordinate(East + calculateWidth, South - calculateHeight);
-		       coordinates[4] = new Coordinate(West - calculateWidth, South - calculateHeight);
-		       LinearRing lr = geomFact.createLinearRing(coordinates);
-		       Polygon rectangleBound = geomFact.createPolygon(lr, new LinearRing[]{}); 
-		       // System.out.println("Area of the square "+rectangleBound.getArea());
-		       Geometry intersection = rectangleBound.intersection(geometry);
-		       System.out.println("Area of the intersection "+intersection.getArea());
-		       Geometry simple = TopologyPreservingSimplifier.simplify(intersection, minimum);
-		       long endTime1 = System.currentTimeMillis();
-		       long duration1=endTime1-startTime1;
-		       System.out.println("time to simplify the polygon" + duration1);
-		       System.out.println("Area of the simply geometry "+simple.getArea());
+			   PrintWriter writer = response.getWriter();
+		       JSONObject json = new JSONObject(); 
+		       
+		       System.out.println(firstLoad);
+			   if(firstLoad.equals("true")){
+				   
+			       Geometry firstSimple = TopologyPreservingSimplifier.simplify(geometry, 0.1);
+			       Envelope envelopForBound = firstSimple.getEnvelopeInternal() ;
+			       System.out.println("get the area for the envelop "+envelopForBound);
+			       
+			       json.put("MinX", envelopForBound.getMinX());
+			       json.put("MaxX", envelopForBound.getMaxX());
+			       json.put("MinY", envelopForBound.getMinY());
+			       json.put("MaxY", envelopForBound.getMaxY());
+			       json.put("geometry",firstSimple);
+			       
+			   }else{
+				   //this is for the case that the country is not first load
+				   long startTime1 = System.currentTimeMillis();
+			       GeometryFactory geomFact =  new GeometryFactory();
+			       Coordinate[] coordinates = new Coordinate[5];
+			       coordinates[0] = new Coordinate(West - calculateWidth, South - calculateHeight);
+			       coordinates[1] = new Coordinate(West - calculateWidth, North + calculateHeight);
+			       coordinates[2] = new Coordinate(East + calculateWidth, North + calculateHeight);
+			       coordinates[3] = new Coordinate(East + calculateWidth, South - calculateHeight);
+			       coordinates[4] = new Coordinate(West - calculateWidth, South - calculateHeight);
+			       LinearRing lr = geomFact.createLinearRing(coordinates);
+			       Polygon rectangleBound = geomFact.createPolygon(lr, new LinearRing[]{}); 
+			       // System.out.println("Area of the square "+rectangleBound.getArea());
+			       Geometry intersection = rectangleBound.intersection(geometry);
+			       System.out.println("Area of the intersection "+intersection.getArea());
+			       Geometry simple = TopologyPreservingSimplifier.simplify(intersection, minimum);
+			       long endTime1 = System.currentTimeMillis();
+			       long duration1=endTime1-startTime1;
+			       System.out.println("time to simplify the polygon" + duration1);
+			       System.out.println("Area of the simply geometry "+simple.getArea());
+			       if(simple.isEmpty()){
+			    	   json.put("geometry",0);
+			    	   //writer.print("\"points\": "+0);
+			    	   //writer.print("\"geometry\": "+0+',');
+			    	   //writer.write('0');
+			       }else{
+			    	   json.put("geometry",simple);
+			    	   //writer.print("\"points\": "+simple.toText());
+			    	   //writer.print("\"geometry\": "+simple.toText()+',');
+			    	   //writer.write(simple.toText());
+			       }
+			   }
+		      
+		     
+		       //double Minx = 
 		       
 		       //write the final result to the font end
-		       PrintWriter write = response.getWriter();
-		       
-		       
-		       if(simple.isEmpty()){
-		    	   write.write('0');
-		       }else{
-		    	   write.write(simple.toText());
-		       }
+		      
+		       //json.put("boundO",envelopForBound.toText());
+		       /*
+		       Coordinate[] coor=envelopForBound.getCoordinates();
+			   for (int i=0;i<coor.length;i++){
+					//System.out.println(coor[i].x+"/"+coor[i].y);
+					json.put("corx"+i,coor[i].x);
+					json.put("cory"+i,coor[i].y);
+			   }*/
+		       /*
+		       writer.print("{");
+			      writer.print("\"results\":{");
+		          writer.print("\"min\": "+342+',');
+		          writer.print("\"max\": "+500+',');
+		          writer.print("\"count\": "+10+',');
+		          writer.print("\"sum\": "+1000);
+			      writer.print("},");
+			      writer.print("\"stats\":{");
+			      writer.print("\"totaltime\":"+(t2-t1)+',');
+			      writer.print("\"num-of-temporal-partitions\":"+5+',');
+			      writer.print("\"num-of-trees\":"+20);
+			      writer.print("}");
+			      writer.print("}");*/
+			      
+			   //writer.print("{");
+			  // writer.print("\"geometry\":{");
+		     
 		       //write.write(simple.toText());
-			   write.flush();
-		       write.close();
+		       /*
+		       writer.print("},");
+		       writer.print("{");
+		       writer.print("\"countReceive\": "+ countResponse);
+		       writer.print("}");*/
+		       json.put("countReceive", countResponse);
+		       //System.out.println(json.toString());
+		       writer.write(json.toString());
+			   writer.flush();
+		       writer.close();
+		  
+		    } catch (Exception e) {
+			      response.setContentType("text/plain;charset=utf-8");
+			      PrintWriter writer = response.getWriter();
+			      e.printStackTrace(writer);
+			      writer.close();
+			      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			    }
+		   
+			  }
+	 private void handleFirstQuery(HttpServletRequest request,
+		      HttpServletResponse response) throws ParseException, IOException {
+		    try {
+		    	 String name = request.getParameter("chooseName");
+			    
+			       Geometry geometry=Getgeom.getgeom(name, GetFileName.vectorfoldpath+"/boundaries.shp", "CNTRY_NAME");
+			     
+				   PrintWriter writer = response.getWriter();
+			       JSONObject json = new JSONObject();
+			       
+			       json.put("geometry", geometry);
+			      
+			       Envelope envelopForBound = geometry.getEnvelopeInternal();
+			       System.out.println("get the area for the envelop "+envelopForBound);
+			       System.out.println("this is first query");
+			       
+			       json.put("Minx", envelopForBound.getMinX());
+			       json.put("MaxX", envelopForBound.getMaxX());
+			       json.put("MinY", envelopForBound.getMinY());
+			       json.put("MaxY", envelopForBound.getMaxY());
+			  
+			       writer.write(json.toString());
+				   writer.flush();
+			       writer.close();
 		  
 		    } catch (Exception e) {
 			      response.setContentType("text/plain;charset=utf-8");

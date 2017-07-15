@@ -18,7 +18,12 @@ var t0;
 var time1;
 var time2;
 var countResponse = 0;
-var countReceive;
+var countReceive = 0;
+var MinX;
+var MaxX;
+var MinY;
+var MaxY;
+var firstLoad;		
 //varaible for dealing with the rectangle in the map
 var saveResponse;
 var config,el,obj,wkt;
@@ -295,9 +300,9 @@ function displayPoly(){
 		  console.log("time to parse the polygon at the client side  and add the polygon to the map" + (t1 - t0) + " milliseconds.")
     }
     
-    //console.log(temp);
+    //console.log(obj);
    
-    //map.fitBounds(temp.getBounce());
+    //map.fitBounds(obj.getBounce());
 }
 function clearPolygon(){
 
@@ -323,6 +328,63 @@ function clearPolygon(){
 
 }
 
+function fitBound(){
+	
+	/*
+	var x1 = MinX - 0.0003;
+	var y1 = MinY - 0.0003;//Was + 1 in Question & Origonal Answer
+	var x2 = MaxX + 0.0003;
+	var y2 = MaxY + 0.0003;//Was - 1 in Question & Origonal Answer*/
+	console.log(MinX);
+	console.log(MinY);
+	
+	var Bounds = new google.maps.LatLngBounds(
+			/*
+	          new google.maps.LatLng( x1, y1), //sw
+	          new google.maps.LatLng( x2, y2) //ne*/
+			//in google map lat=y, lng=x, (south. west) (north,east)
+			 new google.maps.LatLng( MinY, MinX), //sw
+	          new google.maps.LatLng( MaxY, MaxX) //ne
+	        );
+	map.fitBounds(Bounds);
+}
+
+//this is the request function when the user touch the button
+/*
+function firstQuery(){
+	var chooseName = $('#chooseName :selected').val();
+	
+ 	requestURL = requestURL = "cgi-bin/first_query.cgi?"
+                + "chooseName=" + chooseName; 
+ 	
+ 	 jQuery.ajax(requestURL, {success: function(response) {
+ 		console.log(response);
+ 		var obj = JSON.parse(response);
+    	
+    	//move it to the bound
+    	MinX = parseFloat(obj.MinX);
+    	MaxX = parseFloat(obj.MaxX);
+    	MinY = parseFloat(obj.MinY);
+    	MaxY = parseFloat(obj.MaxY);
+    	
+    	saveResponse= obj.geometry;
+    	console.log("I am not ok");
+    	fitBound();
+    	clearPolygon();     
+        displayPoly();
+        
+    	
+     	 
+ 	  }, complete: function() {processingRequest = false;} });
+ 	  
+ 	
+ }*/
+
+function clickTrigger(){
+	firstLoad = true;
+	nameQuery();
+}              
+	
 function nameQuery(){
 	var start_time = new Date().getTime();
   countResponse = countResponse + 1;
@@ -351,7 +413,7 @@ function nameQuery(){
     rHeight = $map.height();
     
     
-  //alert(countResponse); 
+    //console.log(countResponse); 
  	requestURL = requestURL = "cgi-bin/name_query.cgi?"
                 + "chooseName=" + chooseName 
                 + "&aNorth=" + aNorth
@@ -359,42 +421,70 @@ function nameQuery(){
                 + "&aSouth=" + aSouth
                 + "&aWest=" + aWest
                 + "&rWidth=" + rWidth
-                + "&rHeight=" + rHeight; 
+                + "&rHeight=" + rHeight
+                + "&firstLoad=" + firstLoad
                 + "&countResponse=" + countResponse; 
     
    
               
                 
     jQuery.ajax(requestURL, {success: function(response) {
-    	//alert(response);
-
+    	var obj = JSON.parse(response);
+    	//console.log(response);
+    	
+    	/*
+    	//move it to the bound
+    	MinX = parseFloat(obj.MinX);
+    	MaxX = parseFloat(obj.MaxX);
+    	MinY = parseFloat(obj.MinY);
+    	MaxY = parseFloat(obj.MaxY);*/
+    	
+    	saveResponse= obj.geometry;
+    	countReceive = parseInt(obj.countReceive);
+    	//fitBound();
+    	console.log(countReceive);
+    	console.log(countResponse); 
+    	//if(countReceive === parseInt(countResponse)){
     	clearPolygon();
-      saveResponse=response;
-    	if(saveResponse != '0'){
-        //alert(saveResponse); 
-        time0 = performance.now();     
-        displayPoly();
-        // Instantiate Wicket
-        //var wicket = new Wkt.Wkt();
-        //wicket.read(response);
-        //dataQuery();
-        // Assemble your new polygon's options, I used object notation
-        /*
-        var polyOptions = {
-        strokeColor: '#1E90FF',
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        fillColor: '#1E90FF',
-        fillOpacity: 0.35    
-        };
+    		
+    	if(firstLoad == true){
+    		//console.log("get it");
+    		//move it to the bound
+        	MinX = parseFloat(obj.MinX);
+        	MaxX = parseFloat(obj.MaxX);
+        	MinY = parseFloat(obj.MinY);
+        	MaxY = parseFloat(obj.MaxY);
+        	fitBound();
+        	saveResponse= obj.geometry;
+        	displayPoly();
+        	firstLoad = false;
+    	}
+    	else if(saveResponse != '0'){
+    		//alert(saveResponse); 
+    		time0 = performance.now();     
+    		displayPoly();
+    		// Instantiate Wicket
+    		//var wicket = new Wkt.Wkt();
+    		//wicket.read(response);
+    		//dataQuery();
+    		// Assemble your new polygon's options, I used object notation
+    		/*
+        	var polyOptions = {
+        	strokeColor: '#1E90FF',
+        	strokeOpacity: 0.8,
+        	strokeWeight: 2,
+        	fillColor: '#1E90FF',
+        	fillOpacity: 0.35    
+        	};
       
-        var newPoly = wicket.toObject(polyOptions);  
-        newPoly.setMap(map);*/
-        time1 =  performance.now();
-        var request_time = new Date().getTime() - start_time;
-        console.log("total request time" + request_time + " milliseconds.")
-        console.log("front end display time" + (time1 - time0) + " milliseconds.")
-      }
+        	var newPoly = wicket.toObject(polyOptions);  
+        	newPoly.setMap(map);*/
+    		time1 =  performance.now();
+    		var request_time = new Date().getTime() - start_time;
+    		console.log("total request time" + request_time + " milliseconds.")
+    		console.log("front end display time" + (time1 - time0) + " milliseconds.")
+    	}
+     // }
     
     	 
 	  }, complete: function() {processingRequest = false;} });
