@@ -445,11 +445,12 @@ function nameQuery(){
     	console.log(countReceive);
     	console.log(countResponse); 
     	//if(countReceive === parseInt(countResponse)){
-    	clearPolygon();
+    	
     		
     	if(firstLoad == true){
     		//console.log("get it");
     		//move it to the bound
+    		clearPolygon();
         	MinX = parseFloat(obj.MinX);
         	MaxX = parseFloat(obj.MaxX);
         	MinY = parseFloat(obj.MinY);
@@ -461,28 +462,16 @@ function nameQuery(){
     	}
     	else if(saveResponse != '0'){
     		//alert(saveResponse); 
-    		time0 = performance.now();     
-    		displayPoly();
-    		// Instantiate Wicket
-    		//var wicket = new Wkt.Wkt();
-    		//wicket.read(response);
-    		//dataQuery();
-    		// Assemble your new polygon's options, I used object notation
-    		/*
-        	var polyOptions = {
-        	strokeColor: '#1E90FF',
-        	strokeOpacity: 0.8,
-        	strokeWeight: 2,
-        	fillColor: '#1E90FF',
-        	fillOpacity: 0.35    
-        	};
-      
-        	var newPoly = wicket.toObject(polyOptions);  
-        	newPoly.setMap(map);*/
-    		time1 =  performance.now();
-    		var request_time = new Date().getTime() - start_time;
-    		console.log("total request time" + request_time + " milliseconds.")
-    		console.log("front end display time" + (time1 - time0) + " milliseconds.")
+    		if(countReceive < parseInt(countResponse)){
+    			clearPolygon();
+    			time0 = performance.now();     
+        		displayPoly();
+        		time1 =  performance.now();
+        		var request_time = new Date().getTime() - start_time;
+        		console.log("total request time" + request_time + " milliseconds.")
+        		console.log("front end display time" + (time1 - time0) + " milliseconds.")
+    		}
+    		
     	}
      // }
     
