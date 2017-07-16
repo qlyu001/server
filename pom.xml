@@ -5,7 +5,6 @@
   <version>0.0.1-SNAPSHOT</version>
   <properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<geotools.version>14.3</geotools.version>
 		<org.springframework-version>
 			4.1.1.RELEASE
 		</org.springframework-version>
@@ -13,7 +12,28 @@
 		<org.aspectj-version>1.8.0</org.aspectj-version>
 		<org.slf4j-version>1.7.12</org.slf4j-version>
 		 <hadoop.version>2.8.0</hadoop.version>
-	</properties>
+		
+    	<maven.compiler.source>1.8</maven.compiler.source>
+   		<maven.compiler.target>1.8</maven.compiler.target>
+   		<geotools.version>17.0</geotools.version>
+    	<hadoop.version>2.8.0</hadoop.version>
+
+</properties>
+
+ <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
 	<!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-server -->
 	<dependency>
@@ -44,14 +64,18 @@
     <artifactId>jxl</artifactId>
     <version>2.6.12</version>
 </dependency>
-	
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
-			<scope>test</scope>
-		</dependency>
 		
+		 <dependency>
+      		<groupId>junit</groupId>
+      		<artifactId>junit</artifactId>
+      		<version>4.11</version>
+      		<scope>test</scope>
+   		 </dependency>
+		<dependency>
+      		<groupId>edu.ucr.cs.jhdf</groupId>
+      		<artifactId>jhdf</artifactId>
+     	 	<version>0.1-SNAPSHOT</version>
+    	</dependency>
 		 <dependency>
      		<groupId>org.codehaus.jackson</groupId>
       		<artifactId>jackson-mapper-asl</artifactId>
