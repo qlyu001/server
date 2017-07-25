@@ -17,12 +17,17 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.wicket.ajax.json.JSONObject;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.node.ArrayNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.geotools.function.Getgeom;
 import org.geotools.getName.GetFileName;
-
+import org.opengis.feature.Property;
+import org.opengis.feature.simple.SimpleFeature;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -31,6 +36,15 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
+
+import edu.ucr.cs.horus.Clipper;
+import edu.ucr.cs.horus.Collector;
+import edu.ucr.cs.horus.GeoToolsRasterManager;
+import edu.ucr.cs.horus.QueryProcessor;
+import edu.ucr.cs.horus.RasterManager;
+import edu.ucr.cs.horus.ScanClipper;
+import edu.ucr.cs.horus.Statistics;
+import edu.ucr.cs.horus.VectorManager;
 
 
 
@@ -70,13 +84,7 @@ public class MapServer extends AbstractHandler {
 			else if(target.endsWith("/data_query.cgi")){
 				// TODO handle request
 				LOG.info("Received query request: "+target);
-				handleNameQuery(request, response);
-				
-			}
-			else if(target.endsWith("/first_query.cgi")){
-				// TODO handle request
-				LOG.info("Received query request: "+target);
-				handleFirstQuery(request,response);
+				handleDataQuery(request, response);
 				
 			}
 			else {
@@ -262,59 +270,9 @@ public class MapServer extends AbstractHandler {
 			    }
 		   
 			  }
-	 private void handleFirstQuery(HttpServletRequest request,
-		      HttpServletResponse response) throws ParseException, IOException {
-		    try {
-		    	 String name = request.getParameter("chooseName");
-			    
-			       Geometry geometry=Getgeom.getgeom(name, GetFileName.vectorfoldpath+"/boundaries.shp", "CNTRY_NAME");
-			     
-				   PrintWriter writer = response.getWriter();
-			       JSONObject json = new JSONObject();
-			       
-			       json.put("geometry", geometry);
-			      
-			       Envelope envelopForBound = geometry.getEnvelopeInternal();
-			       System.out.println("get the area for the envelop "+envelopForBound);
-			       System.out.println("this is first query");
-			       
-			       json.put("Minx", envelopForBound.getMinX());
-			       json.put("MaxX", envelopForBound.getMaxX());
-			       json.put("MinY", envelopForBound.getMinY());
-			       json.put("MaxY", envelopForBound.getMaxY());
-			  
-			       writer.write(json.toString());
-				   writer.flush();
-			       writer.close();
-		  
-		    } catch (Exception e) {
-			      response.setContentType("text/plain;charset=utf-8");
-			      PrintWriter writer = response.getWriter();
-			      e.printStackTrace(writer);
-			      writer.close();
-			      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			    }
-		   
-			  }
-	 /*
-	 private void handleDataQuery(HttpServletRequest request,
-		      HttpServletResponse response) throws ParseException, IOException {
-		    try {
-		      String name = request.getParameter("chooseName");
-		       System.out.println(name);
-		     
-				
-		  
-		    } catch (Exception e) {
-			      response.setContentType("text/plain;charset=utf-8");
-			      PrintWriter writer = response.getWriter();
-			      e.printStackTrace(writer);
-			      writer.close();
-			      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			    }
-		   
-			  }*/
-	private void handleAggregateQuery(HttpServletRequest request,
+	
+	 
+	 private void handleAggregateQuery(HttpServletRequest request,
 		      HttpServletResponse response) throws ParseException, IOException {
 		    try {
 		      String west = request.getParameter("min_lon");
@@ -352,6 +310,82 @@ public class MapServer extends AbstractHandler {
 		      writer.print("}");
 		      writer.close();
 		      response.setStatus(HttpServletResponse.SC_OK);
+		    } catch (Exception e) {
+		      response.setContentType("text/plain;charset=utf-8");
+		      PrintWriter writer = response.getWriter();
+		      e.printStackTrace(writer);
+		      writer.close();
+		      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		    }
+		  }
+	 
+	 private static ArrayNode formatResults(QueryProcessor.Pair<SimpleFeature[], Collector[]> results, ObjectMapper jsonMapper) {
+		    // A JSON array that contains all results
+		    ArrayNode queryResults = jsonMapper.createArrayNode();
+		    for (int i = 0; i < results.first.length; i++) {
+		      ObjectNode objectAttrs = jsonMapper.createObjectNode();
+		      for (Property property : results.first[i].getProperties()) {
+		        objectAttrs.put(property.getName().toString(), property.getValue().toString());
+		      }
+
+		      ArrayNode objectResults = formatResultJSON(results.second[i], jsonMapper);
+
+		      ObjectNode entryResult = jsonMapper.createObjectNode();
+		      entryResult.put("objectAttributes", objectAttrs);
+		      entryResult.put("queryAnswer", objectResults);
+		      queryResults.add(entryResult);
+		    }
+		    return queryResults;
+		  }
+		 public static ArrayNode formatResultJSON(Collector result, ObjectMapper jsonMapper) {
+			    ArrayNode bandsResults = jsonMapper.createArrayNode();
+			    for (int iBand = 0; iBand < result.getNumBands(); iBand++) {
+			      ObjectNode objectResultsBand = jsonMapper.createObjectNode();
+			      if (result instanceof Statistics) {
+			        Statistics objectStatistics = (Statistics) result;
+			        objectResultsBand.put("sum", objectStatistics.sum[iBand]);
+			        objectResultsBand.put("count", objectStatistics.count[iBand]);
+			        objectResultsBand.put("min", objectStatistics.min[iBand]);
+			        objectResultsBand.put("max", objectStatistics.max[iBand]);
+			        //System.out.println(objectResultsBand[sum]);
+			      }
+			      bandsResults.add(objectResultsBand);
+			    }
+			    return bandsResults;
+			  }
+	private void handleDataQuery(HttpServletRequest request,
+		      HttpServletResponse response) throws ParseException, IOException {
+		    try {
+		      
+		    	 //Geometry geometry=Getgeom.getgeom(name, GetFileName.vectorfoldpath+"/boundaries.shp", "CNTRY_NAME");
+				 RasterManager rasterManger = new GeoToolsRasterManager(GetFileName.rasterfoldpath+"/asd.tif");
+				 VectorManager vectorManager = new VectorManager(GetFileName.vectorfoldpath+"/boundaries.shp");
+			     Geometry geometry =  vectorManager.getGeom("CNTRY_NAME","Japan");
+			     //System.out.println(geometry.toText());
+			     Clipper clipper = new ScanClipper();
+			     QueryProcessor.Pair<SimpleFeature[], Collector[]> stats = new QueryProcessor().stats(GetFileName.rasterfoldpath+"/glc2000_v1_1.tif", GetFileName.vectorfoldpath+"/countries.shp", clipper);
+			     SimpleFeature[] first = stats.first;
+			     Collector[] second = stats.second;
+			     ObjectMapper jsonMapper = new ObjectMapper();
+			     ArrayNode queryResults = formatResults(stats, jsonMapper);
+			     //System.out.println(queryResults.size());
+			     JsonNode jsonNode = queryResults.get(1).get("queryAnswer").get(0).get("sum");
+			     System.out.println(jsonNode);
+			     PrintWriter writer = response.getWriter();
+			     JSONObject json = new JSONObject();
+			     json.put("sum",jsonNode);
+			     jsonNode = queryResults.get(1).get("queryAnswer").get(0).get("min");
+			     json.put("min",jsonNode);
+			     jsonNode = queryResults.get(1).get("queryAnswer").get(0).get("max");
+			     json.put("max",jsonNode);
+			     jsonNode = queryResults.get(1).get("queryAnswer").get(0).get("count");
+			     json.put("count",jsonNode);
+			     writer.write(json.toString());
+				 writer.flush();
+			     writer.close();
+			     //float sum = queryResults["sum"];
+			     //System.out.println(queryResults.toString());
+			     response.setStatus(HttpServletResponse.SC_OK);
 		    } catch (Exception e) {
 		      response.setContentType("text/plain;charset=utf-8");
 		      PrintWriter writer = response.getWriter();

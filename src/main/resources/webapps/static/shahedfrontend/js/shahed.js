@@ -110,6 +110,7 @@ function MoveRectangle(bounds) {
 var processingRequest = false;
 var dataRequest = false;
 // Process the request by submitting it to the backend server
+
 function aggregateQuery(){
   if (rectangleIsDragged)
     return;
@@ -383,6 +384,7 @@ function firstQuery(){
 function clickTrigger(){
 	firstLoad = true;
 	nameQuery();
+	dataQuery();
 }              
 	
 function nameQuery(){
@@ -444,7 +446,14 @@ function nameQuery(){
     	//fitBound();
     	console.log(countReceive);
     	console.log(countResponse); 
-    	//if(countReceive === parseInt(countResponse)){
+    	
+    	
+    	/*
+    	if(countReceive == parseInt(countResponse)){
+    	 
+    	} else {
+      	  console.log("Not Equal");
+    	}*/
     	
     		
     	if(firstLoad == true){
@@ -462,7 +471,8 @@ function nameQuery(){
     	}
     	else if(saveResponse != '0'){
     		//alert(saveResponse); 
-    		if(countReceive < parseInt(countResponse)){
+    		if(countReceive == parseInt(countResponse)){
+    			console.log("Equal");
     			clearPolygon();
     			time0 = performance.now();     
         		displayPoly();
@@ -481,7 +491,7 @@ function nameQuery(){
 	
 }
 
-/*
+
 function dataQuery(){
 
 	
@@ -496,11 +506,24 @@ function dataQuery(){
                 + "chooseName=" + chooseName ;
     
     jQuery.ajax(requestURL, {success: function(response) {
-	  
+    	//console.log(response);
+    	var data = JSON.parse(response);
+    	//console.log(data.min);
+    	min = parseInt(data.min);
+        $("#min").val(min);
+        max = parseInt(data.max);
+        $("#max").val(max);
+        sum = parseInt(data.sum);
+        count = parseInt(data.count);
+        average = sum/count;
+        $("#avg").val(average);
+        
+      
+    	
 	   
 	  }, complete: function() {dataRequest = false;} });
 }
-*/
+
 function generateVideo() {
   if ($("#fromDatePicker").val().length == 0 || $("#toDatePicker").val().length == 0) {
     alert('Please specify start and end date');
@@ -540,7 +563,8 @@ function generateVideo() {
      app.mapIt()
   }});
 }
-    
+
+
 function formatDate(date) {
   var year = date.getFullYear();
   var month = (date.getMonth() + 1).toString();
